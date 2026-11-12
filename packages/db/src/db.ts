@@ -3,7 +3,7 @@ import type { SqlDatabase, SqlStatement } from "sql.js";
 export type { SqlDatabase, SqlStatement };
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import type {
   Agent,
   Floor,
@@ -14,9 +14,8 @@ import type {
 
 export const DB_PATH =
   process.env.AI_OFFICE_DB ?? join(process.cwd(), "data", "office.sqlite");
-const WASM_PATH = fileURLToPath(
-  import.meta.resolve("sql.js/dist/sql-wasm.wasm")
-);
+const nodeRequire = createRequire(import.meta.url);
+const WASM_PATH = nodeRequire.resolve("sql.js/dist/sql-wasm.wasm");
 
 type SqlFactory = { Database: new (buffer?: Uint8Array) => SqlDatabase };
 
@@ -43,11 +42,11 @@ export async function openDb(dbPath: string = DB_PATH) {
   const db: SqlDatabase = existsSync(dbPath)
     ? new SQL.Database(readFileSync(dbPath))
     : new SQL.Database();
-  return { db, SQL };
+  return { db, SQL, path: dbPath };
 }
 
-export function closeDb(ctx: { db: SqlDatabase; SQL: SqlFactory }): void {
-  writeFileSync(DB_PATH, ctx.db.export());
+export function closeDb(ctx: { db: SqlDatabase; SQL: SqlFactory; path?: string }): void {
+  writeFileSync(ctx.path ?? DB_PATH, ctx.db.export());
   ctx.db.close();
 }
 

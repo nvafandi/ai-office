@@ -9,13 +9,15 @@ import {
   runSchema,
   queryAll,
   sqlEscape,
+  toAccountRow,
 } from "@ai-office/db";
+import type { RepoAIAccount } from "@ai-office/db";
 
 const PORT = Number(process.env.PORT ?? 3045);
 const HOST = process.env.HOST ?? "localhost";
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const APP_ROOT = join(__dirname, "..", "..");
-const ROOT = join(APP_ROOT, "web", "public");
+const APP_ROOT = join(__dirname, "..", "..", "..");
+const ROOT = join(APP_ROOT, "apps", "web", "public");
 const DB_PATH =
   process.env.AI_OFFICE_DB ??
   join(APP_ROOT, "packages", "db", "data", "office.sqlite");
@@ -149,7 +151,7 @@ export function createApp() {
       await serveFile(res, join(ROOT, "index.html"));
       return;
     }
-    if (!pathname.startsWith("/api")) {
+    if (!pathname.startsWith("/api") && !pathname.startsWith("/v1")) {
       notFound(res);
       return;
     }
@@ -225,6 +227,72 @@ export function createApp() {
           )
         );
         json(res, 200, issues);
+        return;
+      }
+
+      if (pathname === "/api/gateway/accounts" && method === "GET") {
+        const rows = (await withDb(async (db) =>
+          mapRows(
+            ["id", "provider", "base_url", "model", "api_key", "token_cap", "tokens_used"],
+            queryAll(db, "SELECT id, provider, base_url, model, api_key, token_cap, tokens_used FROM ai_accounts")
+          )
+        )) as unknown as RepoAIAccount[];
+        json(res, 200, rows.map(toAccountRow));
+        return;
+      }
+
+      if (pathname === "/api/gateway/accounts" && method === "POST") {
+        const body = (await readBody(req)) as {
+          provider?: string;
+          baseUrl?: string;
+          model?: string;
+          apiKey?: string | null;
+          tokenCap?: number;
+        };
+        const id = `acct_${crypto.randomUUID().replace(/-/g, "")}`;
+        await withDb(async (db) =>
+          db.exec(
+            `INSERT INTO ai_accounts (id, provider, base_url, model, api_key, token_cap, tokens_used) VALUES (
+              ${sqlEscape(id)}, ${sqlEscape(body.provider ?? "ollama")}, ${sqlEscape(
+              body.baseUrl ?? "http://localhost:11434"
+            )}, ${sqlEscape(body.model ?? "llama3")}, ${sqlEscape(body.apiKey ?? null)}, ${sqlEscape(
+              body.tokenCap ?? 0
+            )}, 0)`
+          )
+        );
+        json(res, 201, {
+          id,
+          provider: body.provider ?? "ollama",
+          baseUrl: body.baseUrl ?? "http://localhost:11434",
+          model: body.model ?? "llama3",
+          apiKey: body.apiKey ?? null,
+          tokenCap: body.tokenCap ?? 0,
+          tokensUsed: 0,
+        });
+        return;
+      }
+
+      // shortcut: respons mock deterministik, ganti ke provider nyata saat API key tersedia
+      if (pathname === "/v1/chat/completions" && method === "POST") {
+        const body = (await readBody(req)) as {
+          model?: string;
+          messages?: Array<{ role: string; content: string }>;
+        };
+        const last = body.messages?.[body.messages.length - 1]?.content ?? "";
+        json(res, 200, {
+          id: `chatcmpl_${crypto.randomUUID().replace(/-/g, "")}`,
+          object: "chat.completion",
+          created: Math.floor(Date.now() / 1000),
+          model: body.model ?? "mock",
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: `[mock] ${last}` },
+              finish_reason: "stop",
+            },
+          ],
+          usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+        });
         return;
       }
 
