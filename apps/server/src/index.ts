@@ -1,7 +1,7 @@
 import { createServer, type Server as HttpServer } from "node:http";
 import { existsSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
-import { join, extname, basename } from "node:path";
+import { join, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   openDb,
@@ -195,9 +195,20 @@ export function createApp() {
     if (
       pathname.startsWith("/app.js") ||
       pathname.startsWith("/style.css") ||
+      pathname.startsWith("/styles/") ||
       pathname === "/favicon.ico"
     ) {
-      await serveFile(res, join(ROOT, basename(pathname)));
+      const rel = pathname.slice(1);
+      if (rel.split("/").includes("..")) {
+        notFound(res);
+        return;
+      }
+      const rawPath = (req.url ?? "").split("?")[0];
+      if (rawPath.split("/").includes("..")) {
+        notFound(res);
+        return;
+      }
+      await serveFile(res, join(ROOT, rel));
       return;
     }
     if (pathname === "/") {
