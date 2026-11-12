@@ -5,6 +5,7 @@ const API = "/api";
 let scene, camera, renderer, controls, raycaster, pointer;
 let floorObjects = [];
 let labels = [];
+const proj = new THREE.Vector3();
 let selectedFloorId = null;
 let pendingFloorId = null;
 const floorCache = new Map();
@@ -236,15 +237,14 @@ function addLabel(text, x, y, z, floorId) {
 function projectLabel() {
   const w = canvas.clientWidth;
   const h = canvas.clientHeight;
-  const proj = new THREE.Vector3();
   labels.forEach((l) => {
     const group = floorObjects.find((o) => o.userData.floorId === l.floorId);
     if (!group) {
       l.el.style.display = "none";
       return;
     }
-    proj.copy(group.position).project(camera);
-    if (proj.z < -1 || proj.z > 1) {
+    proj.set(l.x, l.y, l.z).project(camera);
+    if (proj.z < -1 || proj.z > 1 || proj.x < -1 || proj.x > 1 || proj.y < -1 || proj.y > 1) {
       l.el.style.display = "none";
       return;
     }
