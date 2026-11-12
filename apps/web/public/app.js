@@ -6,6 +6,31 @@ let scene, camera, renderer, controls, raycaster, pointer;
 let floorObjects = [];
 let labels = [];
 const proj = new THREE.Vector3();
+
+// tekstur kayu prosedural, dibuat sekali, dipakai ulang semua floor
+const woodCanvas = document.createElement("canvas");
+woodCanvas.width = 64;
+woodCanvas.height = 64;
+const woodCtx = woodCanvas.getContext("2d");
+woodCtx.fillStyle = "#a67c52";
+woodCtx.fillRect(0, 0, 64, 64);
+woodCtx.strokeStyle = "#8b5a2b";
+woodCtx.lineWidth = 2;
+for (let i = 0; i <= 64; i += 9) {
+  woodCtx.beginPath();
+  woodCtx.moveTo(i, 0);
+  woodCtx.lineTo(i, 64);
+  woodCtx.stroke();
+}
+woodCtx.strokeStyle = "#c49a6e";
+woodCtx.lineWidth = 1;
+for (let i = 4; i <= 64; i += 18) {
+  woodCtx.beginPath();
+  woodCtx.moveTo(i, 0);
+  woodCtx.lineTo(i, 64);
+  woodCtx.stroke();
+}
+const woodTex = new THREE.CanvasTexture(woodCanvas);
 let selectedFloorId = null;
 let pendingFloorId = null;
 const floorCache = new Map();
@@ -163,21 +188,65 @@ function init() {
 function createFloorMesh(index, x, z, name) {
   const group = new THREE.Group();
 
+  // lantai karpet
   const base = new THREE.Mesh(
     new THREE.BoxGeometry(8, 0.6, 8),
-    new THREE.MeshStandardMaterial({ color: 0x161d25, roughness: 0.8 })
+    new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.9 })
   );
   base.position.y = 0.3;
   base.userData = { floorId: name, type: "floor-base" };
   group.add(base);
 
+  // permukaan lantai kayu
   const top = new THREE.Mesh(
     new THREE.BoxGeometry(7.2, 0.1, 7.2),
-    new THREE.MeshStandardMaterial({ color: 0x45a29e, emissive: 0x082020, emissiveIntensity: 0.5 })
+    new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.6 })
   );
   top.position.y = 0.65;
   top.userData = { floorId: name, type: "floor-top" };
   group.add(top);
+
+  // dinding tepi
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.8 });
+  const walls = [
+    { pos: [4, 1.3, 0], size: [0.18, 2.6, 8] },
+    { pos: [-4, 1.3, 0], size: [0.18, 2.6, 8] },
+    { pos: [0, 1.3, 4], size: [8, 2.6, 0.18] },
+    { pos: [0, 1.3, -4], size: [8, 2.6, 0.18] },
+  ];
+  walls.forEach((w) => {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(...w.size), wallMat);
+    wall.position.set(...w.pos);
+    wall.userData = { floorId: name, type: "wall" };
+    group.add(wall);
+  });
+
+  // meja
+  const desk = new THREE.Mesh(
+    new THREE.BoxGeometry(2.2, 0.75, 1.4),
+    new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.6 })
+  );
+  desk.position.set(0, 0.65 + 0.375, 0);
+  desk.userData = { floorId: name, type: "desk" };
+  group.add(desk);
+
+  // kursi
+  const chair = new THREE.Mesh(
+    new THREE.BoxGeometry(0.7, 0.9, 0.7),
+    new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.9 })
+  );
+  chair.position.set(0, 0.65 + 0.45, 1.5);
+  chair.userData = { floorId: name, type: "chair" };
+  group.add(chair);
+
+  // lampu plafond
+  const light = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.1, 0.6),
+    new THREE.MeshStandardMaterial({ color: 0xfff5e1, emissive: 0xfff5e1, emissiveIntensity: 1.5 })
+  );
+  light.position.set(0, 2.6 - 0.15, 0);
+  light.userData = { floorId: name, type: "light" };
+  group.add(light);
 
   // windows
   const winMat = new THREE.MeshStandardMaterial({ color: 0x3aa0c9, emissive: 0x1a3a4a, emissiveIntensity: 0.6 });
