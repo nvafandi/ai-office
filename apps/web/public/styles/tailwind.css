@@ -342,6 +342,9 @@
   .text-\[0\.8rem\] {
     font-size: 0.8rem;
   }
+  .text-\[0\.9rem\] {
+    font-size: 0.9rem;
+  }
   .text-\[0\.85rem\] {
     font-size: 0.85rem;
   }
@@ -382,6 +385,9 @@
   }
   .\[\&\.active\]\:border-\[\#4fc3f7\].active {
     border-color: #4fc3f7;
+  }
+  .\[\&\.active\]\:bg-\[\#161d25\].active {
+    background-color: #161d25;
   }
   .\[\&\.active\]\:text-\[\#fff\].active {
     color: #fff;

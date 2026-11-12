@@ -10,15 +10,31 @@
   </header>
   <div id="canvas"></div>
   <div id="notices-panel" class="bg-[#11141b] border-l border-[#23303a] overflow-y-auto z-20 p-4">
-    <h2 class="text-[#4fc3f7] text-sm mb-3">Notice Board</h2>
-    <div id="notices-list">belum ada notice</div>
-    <form id="notices-form" class="flex flex-col gap-[0.4rem] mt-4 pt-4 border-t border-[#23303a]">
-      <input id="notice-title" placeholder="Judul" required class="bg-[#0b0c10] border border-[#23303a] text-[#c5c6c7] p-[0.4rem] rounded-[4px] text-xs w-full" />
-      <textarea id="notice-content" placeholder="Isi notice" required class="bg-[#0b0c10] border border-[#23303a] text-[#c5c6c7] p-[0.4rem] rounded-[4px] text-xs w-full min-h-[60px]"></textarea>
-      <input id="notice-author" placeholder="Penulis" required class="bg-[#0b0c10] border border-[#23303a] text-[#c5c6c7] p-[0.4rem] rounded-[4px] text-xs w-full" />
-      <button type="submit" class="bg-[#4fc3f7] text-[#0b0c10] border-none p-[0.5rem] rounded-[4px] font-semibold cursor-pointer">Buat</button>
-    </form>
-    <div id="notices-msg" class="msg hidden p-2 text-xs rounded-sm"></div>
+    <button id="panel-close" type="button" class="text-[#889097] text-[0.9rem]">×</button>
+    <div class="flex gap-[0.4rem] mb-3">
+      <button id="tab-notices" type="button" class="text-xs text-[#c5c6c7] border border-[#23303a] bg-[#0b0c10] px-[0.6rem] py-[0.35rem] rounded-[4px] cursor-pointer [&.active]:text-[#fff] [&.active]:border-[#4fc3f7] [&.active]:bg-[#161d25] active">Notice Board</button>
+      <button id="tab-wall" type="button" class="text-xs text-[#c5c6c7] border border-[#23303a] bg-[#0b0c10] px-[0.6rem] py-[0.35rem] rounded-[4px] cursor-pointer [&.active]:text-[#fff] [&.active]:border-[#4fc3f7] [&.active]:bg-[#161d25]">Wall Board</button>
+      <button id="tab-agents" type="button" class="text-xs text-[#c5c6c7] border border-[#23303a] bg-[#0b0c10] px-[0.6rem] py-[0.35rem] rounded-[4px] cursor-pointer [&.active]:text-[#fff] [&.active]:border-[#4fc3f7] [&.active]:bg-[#161d25]">Agent Live View</button>
+    </div>
+    <div id="notices-msg" class="msg hidden p-2 text-xs rounded-sm mb-3"></div>
+    <div id="notices-board">
+      <h2 class="text-[#4fc3f7] text-sm mb-3">Notice Board</h2>
+      <div id="notices-list">belum ada notice</div>
+      <form id="notices-form" class="flex flex-col gap-[0.4rem] mt-4 pt-4 border-t border-[#23303a]">
+        <input id="notice-title" placeholder="Judul" required class="bg-[#0b0c10] border border-[#23303a] text-[#c5c6c7] p-[0.4rem] rounded-[4px] text-xs w-full" />
+        <textarea id="notice-content" placeholder="Isi notice" required class="bg-[#0b0c10] border border-[#23303a] text-[#c5c6c7] p-[0.4rem] rounded-[4px] text-xs w-full min-h-[60px]"></textarea>
+        <input id="notice-author" placeholder="Penulis" required class="bg-[#0b0c10] border border-[#23303a] text-[#c5c6c7] p-[0.4rem] rounded-[4px] text-xs w-full" />
+        <button type="submit" class="bg-[#4fc3f7] text-[#0b0c10] border-none p-[0.5rem] rounded-[4px] font-semibold cursor-pointer">Buat</button>
+      </form>
+    </div>
+    <div id="wall-board" class="hidden">
+      <h2 class="text-[#4fc3f7] text-sm mb-3">Wall Board</h2>
+      <div id="wall-list">memuat…</div>
+    </div>
+    <div id="agent-live" class="hidden">
+      <h2 class="text-[#4fc3f7] text-sm mb-3">Agent Live View</h2>
+      <div id="agent-list">memuat…</div>
+    </div>
   </div>
   <div id="status" class="absolute bottom-4 left-4 z-10 text-xs text-[#889097] pointer-events-none">siap</div>
   <script type="importmap">

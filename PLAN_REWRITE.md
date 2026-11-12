@@ -41,6 +41,7 @@ Rewrite ini sengaja stack lebih ringan; komponen di atas adalah kandidat fase be
 - Tambah `three` ke root `package.json`.
 - Ganti `apps/web/public/index.html` + `app.js` dengan scene 3D: gedung kantor sederhana, lantai (floor) bisa diklik, kamera orbit, grid, lighting.
 - UI menampilkan daftar floor dari `/api/floors` sebagai label di atas canvas.
+- Klik lantai menampilkan panel kanan dengan tab Notice Board / Wall Board / Agent Live View; Wall Board menampilkan `/api/issues?floorId=` dan Agent Live View menampilkan `/api/agents?floorId=` (data di-memori per lantai, switch tab tanpa refetch).
 - `npm run build` + server nyala, buka `http://localhost:3045`, scene 3D tertampil tanpa error.
 
 ## 5. Milestone & keluar

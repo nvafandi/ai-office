@@ -6,6 +6,7 @@ let scene, camera, renderer, controls, raycaster, pointer;
 let floorObjects = [];
 let labels = [];
 let selectedFloorId = null;
+const floorCache = new Map();
 
 const canvas = document.getElementById("canvas");
 const statusEl = document.getElementById("status");
@@ -17,6 +18,17 @@ const noticesMsg = document.getElementById("notices-msg");
 const noticeTitle = document.getElementById("notice-title");
 const noticeContent = document.getElementById("notice-content");
 const noticeAuthor = document.getElementById("notice-author");
+
+const panelEl = document.getElementById("notices-panel");
+const panelClose = document.getElementById("panel-close");
+const tabNotices = document.getElementById("tab-notices");
+const tabWall = document.getElementById("tab-wall");
+const tabAgents = document.getElementById("tab-agents");
+const noticesBoard = document.getElementById("notices-board");
+const wallBoard = document.getElementById("wall-board");
+const agentLive = document.getElementById("agent-live");
+const wallList = document.getElementById("wall-list");
+const agentList = document.getElementById("agent-list");
 
 function setMsg(text, kind) {
   noticesMsg.textContent = text || "";
@@ -94,6 +106,13 @@ async function deleteNotice(id) {
 }
 
 noticesForm.addEventListener("submit", createNotice);
+
+panelClose.addEventListener("click", () => {
+  panelEl.classList.add("hidden");
+});
+tabNotices.addEventListener("click", () => setTab("notices"));
+tabWall.addEventListener("click", () => setTab("wall"));
+tabAgents.addEventListener("click", () => setTab("agents"));
 
 async function fetchJSON(path, opts) {
   const r = await fetch(`${API}${path}`, opts);
@@ -213,6 +232,64 @@ function addLabel(text, x, y, z, floorId) {
   labels.push({ el, floorId, x, y, z });
 }
 
+function setTab(tabId) {
+  tabNotices.classList.toggle("active", tabId === "notices");
+  tabWall.classList.toggle("active", tabId === "wall");
+  tabAgents.classList.toggle("active", tabId === "agents");
+  noticesBoard.classList.toggle("hidden", tabId !== "notices");
+  wallBoard.classList.toggle("hidden", tabId !== "wall");
+  agentLive.classList.toggle("hidden", tabId !== "agents");
+}
+
+function renderWall(issues) {
+  wallList.innerHTML = "";
+  (issues || []).forEach((it) => {
+    const el = document.createElement("div");
+    el.className = "bg-[#161d25] border border-[#23303a] rounded-[6px] p-[0.6rem] text-[0.85rem] mb-[0.6rem]";
+    el.innerHTML = `
+      <div class="text-[#fff] font-semibold mb-[0.25rem]">#${escapeHtml(it.number)} ${escapeHtml(it.title)}</div>
+      <div class="text-[#c5c6c7] text-[0.7rem]">stage: ${escapeHtml(it.stage)} • assignee: ${escapeHtml(it.assignee_id ?? "-")}</div>
+    `;
+    wallList.appendChild(el);
+  });
+}
+
+function renderAgents(agents) {
+  agentList.innerHTML = "";
+  (agents || []).forEach((a) => {
+    const el = document.createElement("div");
+    el.className = "bg-[#161d25] border border-[#23303a] rounded-[6px] p-[0.6rem] text-[0.85rem] mb-[0.6rem]";
+    el.innerHTML = `
+      <div class="text-[#fff] font-semibold mb-[0.25rem]">${escapeHtml(a.name)}</div>
+      <div class="text-[#c5c6c7] text-[0.7rem]">${escapeHtml(a.role)} • ${escapeHtml(a.stage)}</div>
+      <div class="text-[#889097] text-[0.7rem]">model: ${escapeHtml(a.model)} • ${a.tokens_used ?? 0}/${a.token_cap ?? 0}</div>
+    `;
+    agentList.appendChild(el);
+  });
+}
+
+async function loadFloorData(floorId) {
+  const cached = floorCache.get(floorId);
+  if (cached) {
+    renderWall(cached.issues);
+    renderAgents(cached.agents);
+    setMsg("", "");
+    return;
+  }
+  try {
+    const [issues, agents] = await Promise.all([
+      fetchJSON(`/issues?floorId=${encodeURIComponent(floorId)}`),
+      fetchJSON(`/agents?floorId=${encodeURIComponent(floorId)}`),
+    ]);
+    floorCache.set(floorId, { issues, agents });
+    renderWall(issues);
+    renderAgents(agents);
+    setMsg("", "");
+  } catch (err) {
+    setMsg("Gagal muat wall/agent: " + err.message, "err");
+  }
+}
+
 function selectFloor(floorId) {
   selectedFloorId = floorId;
   floorObjects.forEach((o) => {
@@ -228,6 +305,10 @@ function selectFloor(floorId) {
     l.el.classList.toggle("active", l.floorId === floorId);
   });
   statusEl.textContent = `selected: ${floorId}`;
+  panelEl.classList.remove("hidden");
+  setMsg("", "");
+  setTab("wall");
+  loadFloorData(floorId);
 }
 
 async function load() {
