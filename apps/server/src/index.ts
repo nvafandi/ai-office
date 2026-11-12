@@ -14,10 +14,13 @@ import {
 const PORT = Number(process.env.PORT ?? 3045);
 const HOST = process.env.HOST ?? "localhost";
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(__dirname, "..", "..", "web", "public");
+const APP_ROOT = join(__dirname, "..", "..");
+const ROOT = join(APP_ROOT, "web", "public");
 const DB_PATH =
   process.env.AI_OFFICE_DB ??
-  join(__dirname, "..", "..", "..", "packages", "db", "data", "office.sqlite");
+  join(APP_ROOT, "packages", "db", "data", "office.sqlite");
+const THREE_BUILD = join(APP_ROOT, "node_modules", "three", "build");
+const THREE_EXAMPLES = join(APP_ROOT, "node_modules", "three", "examples", "jsm");
 
 function dirname(p: string): string {
   return p.split(/[\\/]/).slice(0, -1).join("/") || ".";
@@ -128,6 +131,16 @@ export function createApp() {
     const pathname = url.pathname;
     const method = req.method ?? "GET";
 
+    if (pathname.startsWith("/three/build/")) {
+      const rel = pathname.slice("/three/build/".length);
+      await serveFile(res, join(THREE_BUILD, rel));
+      return;
+    }
+    if (pathname.startsWith("/three/examples/jsm/")) {
+      const rel = pathname.slice("/three/examples/jsm/".length);
+      await serveFile(res, join(THREE_EXAMPLES, rel));
+      return;
+    }
     if (pathname.startsWith("/app.js") || pathname.startsWith("/style.css") || pathname === "/favicon.ico") {
       await serveFile(res, join(ROOT, basename(pathname)));
       return;
