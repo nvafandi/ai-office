@@ -22,7 +22,7 @@ Repo asli `adrianeyre/ai-office` di `C:\Users\nurvan\Documents\project\ai-office
 Rewrite ini sengaja stack lebih ringan; komponen di atas adalah kandidat fase berikutnya bila diminta.
 
 ## 2. Stack (tidak menambah dependensi baru kecuali wajib)
-- Node >= 20, npm >= 10 (monorepo via root node_modules + npm link).
+- Node >= 26, npm >= 12 (monorepo via root node_modules + npm link).
 - TypeScript (strict, ESM), tsx untuk dev.
 - SQLite file lokal via `sql.js` — tidak ada server DB, tidak ada Docker.
 - Three.js untuk 3D Office (dependensi baru, wajib untuk 3D).

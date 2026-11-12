@@ -5,8 +5,8 @@
   "description": "AI Office rewrite: 3D office where AI agents work your GitHub issues (Node.js, SQLite, no Docker).",
   "type": "module",
   "engines": {
-    "node": ">=20",
-    "npm": ">=10"
+    "node": ">=26",
+    "npm": ">=12"
   },
   "workspaces": ["packages/*", "apps/*"],
   "scripts": {
