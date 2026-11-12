@@ -1,0 +1,11 @@
+{
+  "name": "@ai-office/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo \"web: static assets served by @ai-office/server\"",
+    "dev": "echo \"web: served by @ai-office/server on :3045\"",
+    "test": "echo \"no tests yet\""
+  }
+}

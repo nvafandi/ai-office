@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="id">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Office (rewrite)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #0b0c10; color: #c5c6c7; padding: 1rem; }
+    header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    h1 { font-size: 1.25rem; color: #4fc3f7; }
+    .card { background: #1f2833; border: 1px solid #3a4a5c; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+    form { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    input { background: #0b0c10; border: 1px solid #45a29e; color: #c5c6c7; padding: 0.5rem; border-radius: 4px; flex: 1; min-width: 150px; }
+    button { background: #45a29e; border: none; color: #0b0c10; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: 600; }
+    button:hover { background: #48b5b0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #3a4a5c; }
+    th { color: #4fc3f7; font-size: 0.85rem; }
+    .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 1rem; font-size: 0.75rem; border: 1px solid #45a29e; color: #4fc3f7; }
+    .muted { color: #889097; font-size: 0.9rem; }
+  </style>
+  <header>
+    <h1>AI Office</h1>
+    <span id="status" class="muted">memuat...</span>
+  </header>
+  <div class="card">
+    <form id="floorForm">
+      <input id="floorName" placeholder="Nama floor" required />
+      <input id="floorRepo" placeholder="repo (mis. owner/repo)" />
+      <button type="submit">Buat floor</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2 style="margin-bottom:0.5rem;color:#4fc3f7">Floors</h2>
+    <table id="floorsTable">
+      <thead><tr><th>Nama</th><th>Repo</th><th>Status</th><th>Dibuat</th></tr></thead>
+      <tbody id="floorsBody"></tbody>
+    </table>
+    <p id="floorsEmpty" class="muted" style="display:none">Belum ada floor.</p>
+  </div>
+  <div class="card">
+    <h2 style="margin-bottom:0.5rem;color:#4fc3f7">Issues (pilih floor)</h2>
+    <select id="floorSelect" style="background:#0b0c10;border:1px solid #45a29e;color:#c5c6c7;padding:0.4rem;border-radius:4px;margin-bottom:0.5rem">
+      <option value="">-- pilih floor --</option>
+    </select>
+    <table id="issuesTable">
+      <thead><tr><th>#</th><th>Judul</th><th>Stage</th><th>Assignee</th></tr></thead>
+      <tbody id="issuesBody"></tbody>
+    </table>
+    <p id="issuesEmpty" class="muted" style="display:none">Belum ada issue.</p>
+  </div>
+  <script type="module" src="/app.js"></script>
+</html>

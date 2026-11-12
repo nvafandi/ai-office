@@ -1,0 +1,32 @@
+{
+  "name": "ai-office",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI Office rewrite: 3D office where AI agents work your GitHub issues (Node.js, SQLite, no Docker).",
+  "type": "module",
+  "packageManager": "pnpm@10.14.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=8"
+  },
+  "scripts": {
+    "dev": "pnpm --recursive --parallel dev",
+    "build": "pnpm --recursive --if-present build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit && pnpm --recursive typecheck",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write . && eslint --fix .",
+    "db:seed": "node packages/db/cli/seed.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "~5.8.0",
+    "typescript-eslint": "^8.0.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0",
+    "yaml": "^2.0.0"
+  }
+}

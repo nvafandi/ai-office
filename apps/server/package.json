@@ -1,0 +1,25 @@
+{
+  "name": "@ai-office/server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@ai-office/db": "workspace:*",
+    "@ai-office/shared": "workspace:*",
+    "typescript": "~5.8.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "@ai-office/db": "workspace:*",
+    "@ai-office/shared": "workspace:*"
+  }
+}

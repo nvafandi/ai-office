@@ -1,0 +1,32 @@
+{
+  "name": "@ai-office/db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "db:schema": "tsx src/cli/init.ts",
+    "db:seed": "tsx src/cli/seed.ts",
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@ai-office/shared": "workspace:*",
+    "sql.js": "^1.10.0",
+    "typescript": "~5.8.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "@ai-office/shared": "workspace:*",
+    "sql.js": "^1.10.0"
+  }
+}
