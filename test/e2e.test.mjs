@@ -1,5 +1,6 @@
 process.env.PORT = "3999";
 process.env.AI_OFFICE_DB = process.cwd() + "/test/e2e.sqlite";
+process.env.GATEWAY_ENC_KEY = "e2e-gateway-enc-key-0123456789abcdef0123456789abcd";
 
 import { describe, it, beforeAll, afterAll } from "vitest";
 import assert from "node:assert/strict";
@@ -74,25 +75,50 @@ describe("AI Office e2e", () => {
     assert.ok(Array.isArray(body));
   });
 
-  it("gateway accounts", async () => {
+  it("gateway accounts: enkripsi kunci, response tidak leak kunci", async () => {
     const { status, body } = await req("/api/gateway/accounts", {
       method: "POST",
-      body: JSON.stringify({ provider: "ollama", baseUrl: "http://localhost:11434", model: "llama3", tokenCap: 1000 }),
+      body: JSON.stringify({ provider: "ollama", baseUrl: "http://localhost:11434", model: "llama3", apiKey: "sk-e2e-secret", tokenCap: 1000 }),
     });
     assert.equal(status, 201);
+    assert.equal(body.apiKey, undefined);
+    assert.ok(body.id);
 
     const { status: s2, body: list } = await req("/api/gateway/accounts");
     assert.equal(s2, 200);
-    assert.ok(list.some((a) => a.provider === "ollama"));
+    const acct = list.find((a) => a.id === body.id);
+    assert.ok(acct);
+    assert.equal(acct.provider, "ollama");
+    assert.equal(acct.apiKey, undefined);
+    assert.equal(acct.iv, undefined);
   });
 
-  it("v1 chat completions mock", async () => {
-    const { status, body } = await req("/v1/chat/completions", {
+  it("v1 chat completions butuh accountId", async () => {
+    const { status } = await req("/v1/chat/completions", {
       method: "POST",
-      body: JSON.stringify({ model: "any", messages: [{ role: "user", content: "hi" }] }),
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
     });
-    assert.equal(status, 200);
-    assert.ok(body.choices && body.choices[0] && body.choices[0].message);
+    assert.equal(status, 400);
+  });
+
+  it("v1 chat completions account tidak dikenal 404", async () => {
+    const { status } = await req("/v1/chat/completions", {
+      method: "POST",
+      body: JSON.stringify({ accountId: "acct_tidak_ada", messages: [{ role: "user", content: "hi" }] }),
+    });
+    assert.equal(status, 404);
+  });
+
+  it("v1 chat completions memanggil provider (bukan mock)", async () => {
+    const { body: created } = await req("/api/gateway/accounts", {
+      method: "POST",
+      body: JSON.stringify({ provider: "ollama", baseUrl: "http://localhost:11434", model: "llama3", apiKey: "sk-e2e-provider", tokenCap: 1000 }),
+    });
+    const { status } = await req("/v1/chat/completions", {
+      method: "POST",
+      body: JSON.stringify({ accountId: created.id, messages: [{ role: "user", content: "hi" }] }),
+    });
+    assert.ok(status >= 400, `provider tidak tersedia di uji (harus >= 400, bukan mock 200): ${status}`);
   });
 
   it("orchestrator: assign agent, advance stage, history", async () => {

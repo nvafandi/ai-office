@@ -28,6 +28,7 @@ Rewrite ini sengaja stack lebih ringan; komponen di atas adalah kandidat fase be
 - Three.js untuk 3D Office (dependensi baru, wajib untuk 3D).
 - Vitest + Vite (web), ESLint + Prettier.
 - `npm run dev` nyalakan server; `npm run build` bangun semua paket.
+- **UI web:** vanilla JS + CSS internal di `index.html`/`app.js` (tidak ada Tailwind, tidak ada framework baru). Responsivitas via CSS media query: panel kanan (`#notices-panel`, lebar 320px) menumpuk di bawah canvas saat layar kecil. Ringan, tidak menambah dependensi, tidak akan "sama persis" upstream React+Tailwind (itu adalah keputusan sengaja, YAGNI).
 
 ## 3. Status saat ini (selesai)
 - Monorepo npm, tsconfig, ESLint/Prettier siap.

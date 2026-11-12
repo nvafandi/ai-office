@@ -10,9 +10,9 @@ import {
   queryAll,
   queryRow,
   sqlEscape,
-  toAccountRow,
   toNoticeRow,
 } from "@ai-office/db";
+import { createGateway, GatewayError } from "@ai-office/gateway";
 import {
   assignAgent,
   advanceStage,
@@ -27,7 +27,7 @@ import {
   createOAuthFlow,
   verifyToken,
 } from "@ai-office/github";
-import type { RepoAIAccount, RepoNotice } from "@ai-office/db";
+import type { RepoNotice } from "@ai-office/db";
 
 const PORT = Number(process.env.PORT ?? 3045);
 const HOST = process.env.HOST ?? "localhost";
@@ -50,6 +50,10 @@ const oauthFlow = createOAuthFlow();
 
 function dirname(p: string): string {
   return p.split(/[\\/]/).slice(0, -1).join("/") || ".";
+}
+
+function gw(db: import("@ai-office/db").SqlDatabase) {
+  return createGateway({ db, fetchFn: fetch });
 }
 
 const SCHEMA_SQL = `
@@ -75,7 +79,7 @@ CREATE TABLE IF NOT EXISTS memories (
 );
 CREATE TABLE IF NOT EXISTS ai_accounts (
   id TEXT PRIMARY KEY, provider TEXT NOT NULL CHECK (provider IN ('claude','chatgpt','grok','ollama')),
-  base_url TEXT NOT NULL, model TEXT NOT NULL, api_key TEXT,
+  base_url TEXT NOT NULL, model TEXT NOT NULL, api_key TEXT, iv TEXT,
   token_cap INTEGER NOT NULL DEFAULT 0, tokens_used INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_agents_floor ON agents(floor_id);
@@ -317,24 +321,8 @@ export function createApp() {
       }
 
       if (pathname === "/api/gateway/accounts" && method === "GET") {
-        const rows = (await withDb(async (db) =>
-          mapRows(
-            [
-              "id",
-              "provider",
-              "base_url",
-              "model",
-              "api_key",
-              "token_cap",
-              "tokens_used",
-            ],
-            queryAll(
-              db,
-              "SELECT id, provider, base_url, model, api_key, token_cap, tokens_used FROM ai_accounts",
-            ),
-          ),
-        )) as unknown as RepoAIAccount[];
-        json(res, 200, rows.map(toAccountRow));
+        const accounts = await withDb(async (db) => gw(db).listAccounts());
+        json(res, 200, accounts);
         return;
       }
 
@@ -346,51 +334,43 @@ export function createApp() {
           apiKey?: string | null;
           tokenCap?: number;
         };
-        const id = `acct_${crypto.randomUUID().replace(/-/g, "")}`;
-        await withDb(async (db) =>
-          db.exec(
-            `INSERT INTO ai_accounts (id, provider, base_url, model, api_key, token_cap, tokens_used) VALUES (
-              ${sqlEscape(id)}, ${sqlEscape(body.provider ?? "ollama")}, ${sqlEscape(
-                body.baseUrl ?? "http://localhost:11434",
-              )}, ${sqlEscape(body.model ?? "llama3")}, ${sqlEscape(body.apiKey ?? null)}, ${sqlEscape(
-                body.tokenCap ?? 0,
-              )}, 0)`,
-          ),
+        const account = await withDb(async (db) =>
+          gw(db).createAccount({
+            provider: body.provider ?? "ollama",
+            baseUrl: body.baseUrl ?? "http://localhost:11434",
+            model: body.model ?? "llama3",
+            apiKey: body.apiKey ?? null,
+            tokenCap: body.tokenCap ?? 0,
+          }),
         );
-        json(res, 201, {
-          id,
-          provider: body.provider ?? "ollama",
-          baseUrl: body.baseUrl ?? "http://localhost:11434",
-          model: body.model ?? "llama3",
-          apiKey: body.apiKey ?? null,
-          tokenCap: body.tokenCap ?? 0,
-          tokensUsed: 0,
-        });
+        json(res, 201, account);
         return;
       }
 
-      // shortcut: respons mock deterministik, ganti ke provider nyata saat API key tersedia
       if (pathname === "/v1/chat/completions" && method === "POST") {
         const body = parsedBody as {
-          model?: string;
+          accountId?: string;
           messages?: Array<{ role: string; content: string }>;
-        };
-        const last = body.messages?.[body.messages.length - 1]?.content ?? "";
-        json(res, 200, {
-          id: `chatcmpl_${crypto.randomUUID().replace(/-/g, "")}`,
-          object: "chat.completion",
-          created: Math.floor(Date.now() / 1000),
-          model: body.model ?? "mock",
-          choices: [
-            {
-              index: 0,
-              message: { role: "assistant", content: `[mock] ${last}` },
-              finish_reason: "stop",
-            },
-          ],
-          usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
-        });
-        return;
+          [key: string]: unknown;
+        } | null;
+        if (!body?.accountId || !Array.isArray(body.messages)) {
+          json(res, 400, { error: "accountId dan messages wajib diisi" });
+          return;
+        }
+        const { accountId, ...rest } = body;
+        try {
+          const { status, body: out } = await withDb(async (db) =>
+            gw(db).chatCompletions({ accountId, ...rest }),
+          );
+          json(res, status, out);
+          return;
+        } catch (e) {
+          if (e instanceof GatewayError) {
+            json(res, e.status, { error: e.message });
+            return;
+          }
+          throw e;
+        }
       }
 
       if (pathname === "/api/issues" && method === "POST") {
@@ -751,6 +731,9 @@ export function createApp() {
 
 let server: HttpServer | null = null;
 export async function start() {
+  if (!process.env.GATEWAY_ENC_KEY) {
+    throw new Error("GATEWAY_ENC_KEY wajib diatur");
+  }
   const ctx = await openDb(DB_PATH);
   runSchema(ctx.db, SCHEMA_SQL);
   closeDb(ctx);

@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS ai_accounts (
   base_url TEXT NOT NULL,
   model TEXT NOT NULL,
   api_key TEXT,
+  iv TEXT,
   token_cap INTEGER NOT NULL DEFAULT 0,
   tokens_used INTEGER NOT NULL DEFAULT 0
 );

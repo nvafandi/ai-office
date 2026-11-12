@@ -21,6 +21,7 @@
     "@ai-office/orchestrator": "*",
     "@ai-office/events": "*",
     "@ai-office/communications": "*",
-    "@ai-office/github": "*"
+    "@ai-office/github": "*",
+    "@ai-office/gateway": "*"
   }
 }

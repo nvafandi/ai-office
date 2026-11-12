@@ -137,6 +137,7 @@ export interface RepoAIAccount {
   base_url: string;
   model: string;
   api_key: string | null;
+  iv: string | null;
   token_cap: number;
   tokens_used: number;
 }
@@ -197,7 +198,6 @@ export function toAccountRow(a: RepoAIAccount): AIAccount {
     provider: a.provider as any,
     baseUrl: a.base_url,
     model: a.model,
-    apiKey: a.api_key,
     tokenCap: a.token_cap,
     tokensUsed: a.tokens_used,
   };
