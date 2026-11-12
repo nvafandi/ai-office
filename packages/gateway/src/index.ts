@@ -152,8 +152,6 @@ export function createGateway({
   db: DbLike;
   fetchFn?: typeof fetch;
 }) {
-  encKey(); // fail-closed: kunci enkripsi wajib ada
-
   function listAccounts(): Account[] {
     return all(db, `SELECT ${ACCOUNT_COLS} FROM ai_accounts`).map(toAccount);
   }

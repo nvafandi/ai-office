@@ -731,9 +731,6 @@ export function createApp() {
 
 let server: HttpServer | null = null;
 export async function start() {
-  if (!process.env.GATEWAY_ENC_KEY) {
-    throw new Error("GATEWAY_ENC_KEY wajib diatur");
-  }
   const ctx = await openDb(DB_PATH);
   runSchema(ctx.db, SCHEMA_SQL);
   closeDb(ctx);

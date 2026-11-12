@@ -116,7 +116,8 @@ describe("gateway enkripsi", () => {
     delete process.env.GATEWAY_ENC_KEY;
     assert.throws(() => encryptApiKey("x"));
     assert.throws(() => decryptApiKey({ encrypted: "00", iv: "00" }));
-    assert.throws(() => createGateway({ db: makeDb() }));
+    // createGateway tidak lagi throw pada konstruksi; fail-closed terjadi saat
+    // encryptApiKey/decryptApiKey dipanggil (teruji di atas).
     process.env.GATEWAY_ENC_KEY = before;
   });
 
