@@ -4,16 +4,15 @@
   "private": true,
   "description": "AI Office rewrite: 3D office where AI agents work your GitHub issues (Node.js, SQLite, no Docker).",
   "type": "module",
-  "packageManager": "pnpm@10.14.0",
   "engines": {
     "node": ">=20",
-    "pnpm": ">=8"
+    "npm": ">=10"
   },
   "scripts": {
-    "dev": "pnpm --recursive --parallel dev",
-    "build": "pnpm --recursive --if-present build",
+    "dev": "tsx watch apps/server/src/index.ts",
+    "build": "tsc -p packages/shared/tsconfig.json && tsc -p packages/db/tsconfig.json && tsc -p apps/server/tsconfig.json",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit && pnpm --recursive typecheck",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write . && eslint --fix .",
     "db:seed": "node packages/db/cli/seed.js"

@@ -16,7 +16,7 @@ Sumber: https://github.com/adrianeyre/ai-office — 3D office di mana agen AI me
 - **e2e + test**: unit, integrasi, e2e, screenshot.
 
 ## 2. Stack (tidak menambah dependensi baru kecuali wajib)
-- Node >= 20, pnpm >= 8 (workspace monorepo; dev pakai Node 24 / pnpm 10 yang tersedia).
+- Node >= 20, npm >= 10 (monorepo via npm link + root node_modules).
 - TypeScript (strict, ESM), tsx untuk dev.
 - SQLite (file lokal, `better-sqlite3`) untuk semua penyimpanan — tidak ada server database, tidak ada Docker.
 - Vitest + Vite (web), ESLint + Prettier.
@@ -34,7 +34,7 @@ Sumber: https://github.com/adrianeyre/ai-office — 3D office di mana agen AI me
 | communications | notice, notif, integrasi pihak ketiga (Google dll), wall board |
 
 ## 4. Fase pekerjaan
-1. **Pondok**: workspace pnpm, tsconfig, ESLint/Prettier, SQLite lokal, skrip `dev`/`build`/`test`. Tiap paket bisa build + typecheck mandiri.
+1. **Pondok**: monorepo npm (root node_modules + npm link), tsconfig, ESLint/Prettier, SQLite lokal, skrip `dev`/`build`/`test`. Tiap paket bisa build + typecheck mandiri.
 2. **Infra inti**: `shared` + `db` (schema SQLite: floors, agents, issues, memories). Seed data agar bisa divalidasi segera.
 3. **Gateway + AI**: `packages/gateway` + `/v1`, load balancer, token cap, kunci. Pakai `apps/server` sebagai host HTTP.
 4. **GitHub + event bus**: `packages/github`, `packages/events`, intake isu → floor, webhook verifikasi.
@@ -55,7 +55,7 @@ Sumber: https://github.com/adrianeyre/ai-office — 3D office di mana agen AI me
 - `pnpm dev` di root nyalakan server; `pnpm build` + `pnpm test` lolos.
 
 ## 6. Milestone & keluar (definisi selesai MVP)
-- M1 (selesai): workspace, shared, db, SQLite lokal tanpa Docker.
+- M1 (selesai): monorepo npm, shared, db, SQLite lokal tanpa Docker.
 - M2: `pnpm dev` nyalakan server di 3045, `GET /api/floors` mengembalikan data dari SQLite.
 - M3: web UI menampilkan floor + issue dari API.
 - M4: `pnpm build && pnpm test && pnpm typecheck` lolos.

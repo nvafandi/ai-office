@@ -13,13 +13,8 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@ai-office/db": "workspace:*",
-    "@ai-office/shared": "workspace:*",
     "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
-  "dependencies": {
-    "@ai-office/db": "workspace:*",
-    "@ai-office/shared": "workspace:*"
-  }
+  "dependencies": {}
 }

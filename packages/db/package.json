@@ -20,13 +20,11 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@ai-office/shared": "workspace:*",
     "sql.js": "^1.10.0",
     "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
   "dependencies": {
-    "@ai-office/shared": "workspace:*",
     "sql.js": "^1.10.0"
   }
 }
