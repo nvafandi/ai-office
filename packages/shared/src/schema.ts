@@ -72,3 +72,13 @@ export const AIAccountSchema = z.object({
   tokenCap: z.number().nonnegative(),
   tokensUsed: z.number().nonnegative(),
 });
+
+export const NoticeSchema = z.object({
+  id: z.string(),
+  floorId: z.string(),
+  title: z.string().min(1),
+  content: z.string().min(1),
+  author: z.string().min(1),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});

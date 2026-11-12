@@ -70,3 +70,13 @@ export interface AIAccount {
   tokenCap: number;
   tokensUsed: number;
 }
+
+export interface Notice {
+  id: string;
+  floorId: string;
+  title: string;
+  content: string;
+  author: string;
+  createdAt: string;
+  updatedAt: string;
+}

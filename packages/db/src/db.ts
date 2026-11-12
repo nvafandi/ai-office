@@ -10,6 +10,7 @@ import type {
   Issue,
   Memory,
   AIAccount,
+  Notice,
 } from "@ai-office/shared";
 
 export const DB_PATH =
@@ -199,5 +200,26 @@ export function toAccountRow(a: RepoAIAccount): AIAccount {
     apiKey: a.api_key,
     tokenCap: a.token_cap,
     tokensUsed: a.tokens_used,
+  };
+}
+
+export interface RepoNotice {
+  id: string;
+  floor_id: string;
+  title: string;
+  content: string;
+  author: string;
+  created_at: string;
+  updated_at: string;
+}
+export function toNoticeRow(n: RepoNotice): Notice {
+  return {
+    id: n.id,
+    floorId: n.floor_id,
+    title: n.title,
+    content: n.content,
+    author: n.author,
+    createdAt: n.created_at,
+    updatedAt: n.updated_at,
   };
 }

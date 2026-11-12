@@ -18,10 +18,12 @@
   },
   "devDependencies": {
     "@ai-office/db": "*",
+    "@ai-office/events": "*",
     "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
   "dependencies": {
-    "@ai-office/db": "*"
+    "@ai-office/db": "*",
+    "@ai-office/events": "*"
   }
 }

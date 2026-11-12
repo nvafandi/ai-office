@@ -12,6 +12,7 @@ export {
   toIssueRow,
   toMemoryRow,
   toAccountRow,
+  toNoticeRow,
 } from "./db.js";
 export type {
   Db,
@@ -22,4 +23,5 @@ export type {
   RepoIssue,
   RepoMemory,
   RepoAIAccount,
+  RepoNotice,
 } from "./db.js";

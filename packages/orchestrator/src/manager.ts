@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { queryAll, queryRow, sqlEscape, type SqlDatabase } from "@ai-office/db";
+import { bus } from "@ai-office/events";
 import { nextStage } from "./pipeline.js";
 
 function now(): string {
@@ -28,6 +29,7 @@ export function assignAgent(
   db.exec(
     `UPDATE issues SET assignee_id = ${sqlEscape(agentId)}, updated_at = ${sqlEscape(now())} WHERE id = ${sqlEscape(issueId)}`
   );
+  bus.publish("issue:assigned", { issueId, agentId });
   return { issueId, agentId };
 }
 
@@ -49,6 +51,7 @@ export function advanceStage(
     `INSERT INTO stage_history (id, issue_id, from_stage, to_stage, note, created_at) VALUES (
       ${sqlEscape(randomUUID())}, ${sqlEscape(issueId)}, ${sqlEscape(from)}, ${sqlEscape(to)}, ${sqlEscape(note)}, ${sqlEscape(at)})`
   );
+  bus.publish("issue:stage_changed", { issueId, from, to });
   return { issueId, from, to };
 }
 

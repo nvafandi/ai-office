@@ -16,5 +16,11 @@
     "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@ai-office/db": "*",
+    "@ai-office/orchestrator": "*",
+    "@ai-office/events": "*",
+    "@ai-office/communications": "*",
+    "@ai-office/github": "*"
+  }
 }

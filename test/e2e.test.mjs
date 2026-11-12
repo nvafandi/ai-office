@@ -4,6 +4,7 @@ process.env.AI_OFFICE_DB = process.cwd() + "/test/e2e.sqlite";
 import { describe, it, beforeAll, afterAll } from "vitest";
 import assert from "node:assert/strict";
 import { unlinkSync } from "node:fs";
+import { bus } from "../packages/events/dist/index.js";
 
 let start;
 let server;
@@ -129,5 +130,152 @@ describe("AI Office e2e", () => {
     assert.equal(history.length, 1);
     assert.equal(history[0].from, "needs-work");
     assert.equal(history[0].to, "needs-review");
+  });
+});
+
+describe("events + notices + connections", () => {
+  let floorId;
+  let issueId;
+  let agentId;
+  let noticeId;
+  const createdEvents = [];
+  const stageEvents = [];
+  const assignedEvents = [];
+
+  const onCreated = (p) => createdEvents.push(p);
+  const onStage = (p) => stageEvents.push(p);
+  const onAssigned = (p) => assignedEvents.push(p);
+
+  beforeAll(async () => {
+    bus.subscribe("issue:created", onCreated);
+    bus.subscribe("issue:stage_changed", onStage);
+    bus.subscribe("issue:assigned", onAssigned);
+
+    const { body: floors } = await req("/api/floors");
+    floorId = floors[0].id;
+
+    const { body: issue } = await req("/api/issues", {
+      method: "POST",
+      body: JSON.stringify({ floorId, title: "Event Issue" }),
+    });
+    issueId = issue.id;
+
+    const { body: agent } = await req("/api/agents", {
+      method: "POST",
+      body: JSON.stringify({ floorId, name: "Event Agent" }),
+    });
+    agentId = agent.id;
+  });
+
+  afterAll(() => {
+    bus.unsubscribe("issue:created", onCreated);
+    bus.unsubscribe("issue:stage_changed", onStage);
+    bus.unsubscribe("issue:assigned", onAssigned);
+  });
+
+  it("publish issue:created saat POST /api/issues", () => {
+    assert.equal(createdEvents.length, 1);
+    assert.equal(createdEvents[0].issue.id, issueId);
+    assert.equal(createdEvents[0].issue.floorId, floorId);
+    assert.equal(createdEvents[0].issue.title, "Event Issue");
+    assert.equal(createdEvents[0].floorId, floorId);
+  });
+
+  it("publish issue:assigned saat assign agent", async () => {
+    const { status } = await req(`/api/issues/${issueId}/assign`, {
+      method: "POST",
+      body: JSON.stringify({ agentId }),
+    });
+    assert.equal(status, 200);
+    assert.equal(assignedEvents.length, 1);
+    assert.equal(assignedEvents[0].issueId, issueId);
+    assert.equal(assignedEvents[0].agentId, agentId);
+  });
+
+  it("publish issue:stage_changed saat advance stage", async () => {
+    const { status, body } = await req(`/api/issues/${issueId}/advance`, {
+      method: "POST",
+    });
+    assert.equal(status, 200);
+    assert.equal(body.from, "needs-work");
+    assert.equal(body.to, "needs-review");
+    assert.equal(stageEvents.length, 1);
+    assert.deepEqual(stageEvents[0], { issueId, from: "needs-work", to: "needs-review" });
+  });
+
+  it("unsubscribe berhenti memanggil handler", async () => {
+    bus.unsubscribe("issue:stage_changed", onStage);
+    await req(`/api/issues/${issueId}/advance`, { method: "POST" });
+    assert.equal(stageEvents.length, 1);
+  });
+
+  it("notices kosong pada fresh DB", async () => {
+    const { status, body } = await req("/api/notices");
+    assert.equal(status, 200);
+    assert.deepEqual(body, []);
+  });
+
+  it("POST /api/notices 201 dengan id + createdAt", async () => {
+    const { status, body } = await req("/api/notices", {
+      method: "POST",
+      body: JSON.stringify({ floor_id: floorId, title: "Penting", content: "isi notice", author: "admin" }),
+    });
+    assert.equal(status, 201);
+    assert.ok(body.id);
+    assert.ok(body.createdAt);
+    assert.equal(body.title, "Penting");
+    noticeId = body.id;
+  });
+
+  it("GET /api/notices filter floorId", async () => {
+    const { status, body } = await req(`/api/notices?floorId=${encodeURIComponent(floorId)}`);
+    assert.equal(status, 200);
+    assert.ok(body.some((n) => n.id === noticeId));
+
+    const { body: other } = await req(`/api/notices?floorId=floor_tidak_ada`);
+    assert.equal(other.length, 0);
+  });
+
+  it("DELETE /api/notices/:id 200, lalu 404", async () => {
+    const { status } = await req(`/api/notices/${noticeId}`, { method: "DELETE" });
+    assert.equal(status, 200);
+    const { status: s2 } = await req(`/api/notices/${noticeId}`, { method: "DELETE" });
+    assert.equal(s2, 404);
+  });
+
+  it("POST /api/notices body kurang 400", async () => {
+    const { status } = await req("/api/notices", {
+      method: "POST",
+      body: JSON.stringify({ floorId, title: "Judul saja" }),
+    });
+    assert.equal(status, 400);
+  });
+
+  it("GET /api/connections daftar 8 penyedia", async () => {
+    const { status, body } = await req("/api/connections");
+    assert.equal(status, 200);
+    assert.equal(body.length, 8);
+    assert.ok(body.some((c) => c.provider === "slack"));
+    assert.ok(body.every((c) => c.mock === true));
+  });
+
+  it("POST /api/connections/:id/send 200 mock:true", async () => {
+    const { status, body } = await req("/api/connections/conn_slack/send", {
+      method: "POST",
+      body: JSON.stringify({ message: "hi" }),
+    });
+    assert.equal(status, 200);
+    assert.equal(body.ok, true);
+    assert.equal(body.provider, "slack");
+    assert.equal(body.mock, true);
+    assert.ok(body.messageId);
+  });
+
+  it("POST /api/connections/:id/send id salah 404", async () => {
+    const { status } = await req("/api/connections/conn_tidak_ada/send", {
+      method: "POST",
+      body: JSON.stringify({ message: "hi" }),
+    });
+    assert.equal(status, 404);
   });
 });

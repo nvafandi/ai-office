@@ -1,0 +1,31 @@
+{
+  "name": "@ai-office/github",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@ai-office/db": "*",
+    "@ai-office/orchestrator": "*",
+    "@ai-office/events": "*",
+    "typescript": "~5.8.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "@ai-office/db": "*",
+    "@ai-office/orchestrator": "*",
+    "@ai-office/events": "*"
+  }
+}

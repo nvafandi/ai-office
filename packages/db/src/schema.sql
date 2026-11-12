@@ -60,3 +60,25 @@ CREATE INDEX IF NOT EXISTS idx_agents_floor ON agents(floor_id);
 CREATE INDEX IF NOT EXISTS idx_issues_floor ON issues(floor_id);
 CREATE INDEX IF NOT EXISTS idx_issues_stage ON issues(stage);
 CREATE INDEX IF NOT EXISTS idx_memories_scope ON memories(scope, scope_id);
+
+CREATE TABLE IF NOT EXISTS notices (
+  id TEXT PRIMARY KEY,
+  floor_id TEXT NOT NULL REFERENCES floors(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  author TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_notices_floor ON notices(floor_id);
+
+CREATE TABLE IF NOT EXISTS github_installations (
+  id TEXT PRIMARY KEY,
+  installation_id INTEGER NOT NULL UNIQUE,
+  account_login TEXT NOT NULL,
+  encrypted_token TEXT NOT NULL,
+  iv TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_github_installations_account ON github_installations(account_login);
