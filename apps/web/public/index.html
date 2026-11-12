@@ -15,12 +15,40 @@
     .floor-label { position: absolute; z-index: 10; background: rgba(11,12,16,0.85); border: 1px solid #45a29e; color: #4fc3f7; padding: 0.35rem 0.6rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; user-select: none; pointer-events: auto; white-space: nowrap; }
     .floor-label:hover { background: #161d25; }
     .floor-label.active { color: #fff; border-color: #4fc3f7; }
+    #canvas { width: calc(100% - 320px); }
+    #notices-panel { position: absolute; top: 0; right: 0; width: 320px; height: 100%; background: #11141b; border-left: 1px solid #23303a; overflow-y: auto; z-index: 20; padding: 1rem; }
+    #notices-panel h2 { font-size: 0.95rem; color: #4fc3f7; margin: 0 0 0.75rem 0; }
+    .notice { background: #161d25; border: 1px solid #23303a; border-radius: 6px; padding: 0.6rem; margin-bottom: 0.6rem; font-size: 0.85rem; }
+    .notice .title { color: #fff; font-weight: 600; margin-bottom: 0.25rem; }
+    .notice .content { color: #c5c6c7; margin-bottom: 0.35rem; white-space: pre-wrap; }
+    .notice .meta { color: #889097; font-size: 0.7rem; margin-bottom: 0.35rem; }
+    .btn-del { background: transparent; border: 1px solid #45a29e; color: #4fc3f7; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; cursor: pointer; }
+    .btn-del:hover { background: #45a29e; color: #0b0c10; }
+    .notice-form { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #23303a; }
+    .notice-form input, .notice-form textarea { background: #0b0c10; border: 1px solid #23303a; color: #c5c6c7; padding: 0.4rem; border-radius: 4px; font: inherit; font-size: 0.8rem; }
+    .notice-form textarea { resize: vertical; min-height: 60px; }
+    .btn-create { background: #4fc3f7; color: #0b0c10; border: none; padding: 0.5rem; border-radius: 4px; font-weight: 600; cursor: pointer; }
+    .btn-create:hover { background: #7fd4ff; }
+    .msg { margin-top: 0.6rem; font-size: 0.75rem; padding: 0.35rem; border-radius: 4px; display: none; }
+    .msg.ok { display: block; background: #1a4a3a; color: #6ee7b7; border: 1px solid #45a29e; }
+    .msg.err { display: block; background: #4a1a1a; color: #fca5a5; border: 1px solid #7f1d1d; }
   </style>
   <header>
     <h1 id="title">AI Office</h1>
     <div class="muted" id="subtitle">memuat floor…</div>
   </header>
   <div id="canvas"></div>
+  <div id="notices-panel">
+    <h2>Notice Board</h2>
+    <div id="notices-list">belum ada notice</div>
+    <form id="notices-form" class="notice-form">
+      <input id="notice-title" placeholder="Judul" required />
+      <textarea id="notice-content" placeholder="Isi notice" required></textarea>
+      <input id="notice-author" placeholder="Penulis" required />
+      <button type="submit" class="btn-create">Buat</button>
+    </form>
+    <div id="notices-msg" class="msg"></div>
+  </div>
   <div id="status">siap</div>
   <script type="importmap">
     {

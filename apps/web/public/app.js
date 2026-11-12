@@ -11,8 +11,91 @@ const canvas = document.getElementById("canvas");
 const statusEl = document.getElementById("status");
 const subtitleEl = document.getElementById("subtitle");
 
-async function fetchJSON(path) {
-  const r = await fetch(`${API}${path}`);
+const noticesList = document.getElementById("notices-list");
+const noticesForm = document.getElementById("notices-form");
+const noticesMsg = document.getElementById("notices-msg");
+const noticeTitle = document.getElementById("notice-title");
+const noticeContent = document.getElementById("notice-content");
+const noticeAuthor = document.getElementById("notice-author");
+
+function setMsg(text, kind) {
+  noticesMsg.textContent = text || "";
+  noticesMsg.className = "msg " + (kind || "");
+  noticesMsg.style.display = text ? "block" : "none";
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
+async function fetchNotices() {
+  try {
+    const notices = await fetchJSON("/notices");
+    renderNotices(notices);
+    setMsg("", "");
+  } catch (err) {
+    setMsg("Gagal muat notice: " + err.message, "err");
+  }
+}
+
+function renderNotices(notices) {
+  noticesList.innerHTML = "";
+  (notices || []).forEach((n) => {
+    const el = document.createElement("div");
+    el.className = "notice";
+    el.innerHTML = `
+      <div class="title">${escapeHtml(n.title)}</div>
+      <div class="content">${escapeHtml(n.content)}</div>
+      <div class="meta">${escapeHtml(n.author)} • ${n.createdAt ? new Date(n.createdAt).toLocaleString("id-ID") : "-"}</div>
+      <button class="btn-del" type="button">hapus</button>
+    `;
+    el.querySelector(".btn-del").addEventListener("click", () => deleteNotice(n.id));
+    noticesList.appendChild(el);
+  });
+}
+
+async function createNotice(e) {
+  e.preventDefault();
+  if (!selectedFloorId) {
+    setMsg("Pilih floor terlebih dahulu", "err");
+    return;
+  }
+  const floorId = selectedFloorId;
+  try {
+    await fetchJSON("/notices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        floor_id: floorId,
+        title: noticeTitle.value,
+        content: noticeContent.value,
+        author: noticeAuthor.value,
+      }),
+    });
+    noticeTitle.value = "";
+    noticeContent.value = "";
+    noticeAuthor.value = "";
+    setMsg("Notice dibuat", "ok");
+    await fetchNotices();
+  } catch (err) {
+    setMsg("Gagal buat notice: " + err.message, "err");
+  }
+}
+
+async function deleteNotice(id) {
+  try {
+    await fetchJSON(`/notices/${id}`, { method: "DELETE" });
+    setMsg("Notice dihapus", "ok");
+    await fetchNotices();
+  } catch (err) {
+    setMsg("Gagal hapus notice: " + err.message, "err");
+  }
+}
+
+noticesForm.addEventListener("submit", createNotice);
+
+async function fetchJSON(path, opts) {
+  const r = await fetch(`${API}${path}`, opts);
   if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
   return r.json();
 }
@@ -149,16 +232,12 @@ function selectFloor(floorId) {
 async function load() {
   try {
     const floors = await fetchJSON("/floors");
-    if (!floors.length) {
-      // seed demo floor so scene is not empty
-        placeFloors([{ id: "demo_1", name: "Demo Floor" }]);
-    } else {
-      placeFloors(floors);
-    }
+    placeFloors(floors);
   } catch (err) {
-    statusEl.textContent = "API tidak tersedia — demo saja";
-    placeFloors([{ id: "demo_1", name: "Demo Floor" }]);
+    statusEl.textContent = "API tidak tersedia";
+    placeFloors([]);
   }
+  await fetchNotices();
 }
 
 function onResize() {

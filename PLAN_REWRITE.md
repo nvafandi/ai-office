@@ -7,10 +7,10 @@ Sumber: https://github.com/adrianeyre/ai-office — 3D office di mana agen AI me
 - **apps/web**: Web app + 3D Office (Three.js), floor view, agent live view, whiteboard, notice board, wall board. Dalam progres: 3D Office test UI.
 - **packages/shared**: tipe, skema zod, utilitas lintas paket. Selesai.
 - **packages/db**: SQLite lokal via `sql.js` (tanpa Docker/Postgres), skema + migrasi + seed. Selesai.
-- **packages/events**: event bus. Belum.
-- **packages/github**: GitHub App client, intake isu. Belum.
+- **packages/events**: event bus. Selesai (EventBus typed, subscribe/unsubscribe/publish, diintegrasikan ke orchestrator + server).
+- **packages/github**: GitHub App client, intake isu. Selesai (OAuth URL + code exchange, AES-256-GCM token enkripsi, HMAC webhook verify, installations, intakeFromGitHub).
 - **packages/orchestrator**: manager, pipeline isu, sandbox lokal, watchdog. Selesai (pipeline stage + assign/advance/history + runner sandbox + watchdog idle).
-- **packages/communications**: Notice Board, integrasi pihak ketiga. Belum.
+- **packages/communications**: Notice Board, integrasi pihak ketiga. Selesai (tabel notices, GET/POST/DELETE /api/notices, ConnectionManager 8 provider mock, GET /api/connections + POST /api/connections/:id/send).
 
 ## 2. Stack (tidak menambah dependensi baru kecuali wajib)
 - Node >= 20, npm >= 10 (monorepo via root node_modules + npm link).
@@ -24,8 +24,8 @@ Sumber: https://github.com/adrianeyre/ai-office — 3D office di mana agen AI me
 - Monorepo npm, tsconfig, ESLint/Prettier siap.
 - `packages/shared`: tipe (Floor, Agent, Issue, Memory, AIAccount), skema zod, util. Build OK.
 - `packages/db`: SQLite lokal via `sql.js`, skema + migrasi + seed. Build OK.
-- `apps/server`: HTTP `:3045`, API `/api/health`, `/api/floors` (GET/POST), `/api/agents` (GET/POST), `/api/issues` (GET/POST), gateway `/api/gateway/accounts`, `/v1/chat/completions` (mock), orchestrator `/api/issues/:id/assign|advance|history`. Melayani UI statis + aset Three.js. Build OK + diuji runtime.
-- `apps/web`: halaman HTML + JS sederhana (daftar floor/issue). Sudah berjalan di server.
+- `apps/server`: HTTP `:3045`, API `/api/health`, `/api/floors` (GET/POST), `/api/agents` (GET/POST), `/api/issues` (GET/POST), gateway `/api/gateway/accounts`, `/v1/chat/completions` (mock), orchestrator `/api/issues/:id/assign|advance|history`, notices `/api/notices` (GET/POST/DELETE), connections `/api/connections` (+`/:id/send`), GitHub `/api/github/*`. Melayani UI statis + aset Three.js. Build OK + diuji runtime.
+- `apps/web`: halaman HTML + JS sederhana (daftar floor/issue via Three.js). Sudah ditambah **Notice Board panel kanan** (daftar/buat/hapus notice dari `/api/notices`). Sudah berjalan di server.
 
 ## 4. Target berikutnya (3D Office test UI)
 - Tambah `three` ke root `package.json`.
@@ -37,8 +37,11 @@ Sumber: https://github.com/adrianeyre/ai-office — 3D office di mana agen AI me
 - M1 (selesai): monorepo npm, shared, db, SQLite lokal tanpa Docker.
 - M2 (selesai): server `:3045`, API floors/agents/issues + gateway, build lolos.
 - M3 (selesai): web UI menampilkan floor + issue dari API.
-- M4 (ini): 3D Office test UI (Three.js) berjalan di browser via server `:3045`.
-- M5 (ini): `npm run build && npm run test` lolos (build + 12 test).
+- M4 (selesai): 3D Office test UI (Three.js) berjalan di browser via server `:3045`.
+- M5 (selesai): `npm run build && npm run test` lolos (build + 43 test).
+- M6 (selesai): Communications — Notice Board UI + backend, GitHub App live OAuth + token (simulasi tanpa kredensial nyata), event bus, orchestrator pipeline.
+
+Sisa opsional: whiteboard, wall board, agent live view di 3D, GitHub App live production (butuh kredensial GitHub asli), deploy production.
 
 ## 6. Risiko
 - Three.js via CDN ESM di browser — pastikan impor berjalan di server statis Node.
