@@ -20,8 +20,9 @@ const noticeAuthor = document.getElementById("notice-author");
 
 function setMsg(text, kind) {
   noticesMsg.textContent = text || "";
-  noticesMsg.className = "msg " + (kind || "");
-  noticesMsg.style.display = text ? "block" : "none";
+  const ok = "bg-[#1a4a3a] text-[#6ee7b7] border border-[#45a29e]";
+  const err = "bg-[#4a1a1a] text-[#fca5a5] border border-[#7f1d1d]";
+  noticesMsg.className = "msg p-2 text-xs rounded-sm " + (text ? "block " + (kind === "ok" ? ok : err) : "hidden");
 }
 
 function escapeHtml(s) {
@@ -42,14 +43,14 @@ function renderNotices(notices) {
   noticesList.innerHTML = "";
   (notices || []).forEach((n) => {
     const el = document.createElement("div");
-    el.className = "notice";
+    el.className = "bg-[#161d25] border border-[#23303a] rounded-[6px] p-[0.6rem] text-[0.85rem] mb-[0.6rem]";
     el.innerHTML = `
-      <div class="title">${escapeHtml(n.title)}</div>
-      <div class="content">${escapeHtml(n.content)}</div>
-      <div class="meta">${escapeHtml(n.author)} • ${n.createdAt ? new Date(n.createdAt).toLocaleString("id-ID") : "-"}</div>
-      <button class="btn-del" type="button">hapus</button>
+      <div class="text-[#fff] font-semibold mb-[0.25rem]">${escapeHtml(n.title)}</div>
+      <div class="text-[#c5c6c7] mb-[0.35rem] whitespace-pre-wrap">${escapeHtml(n.content)}</div>
+      <div class="text-[#889097] text-[0.7rem] mb-[0.35rem]">${escapeHtml(n.author)} • ${n.createdAt ? new Date(n.createdAt).toLocaleString("id-ID") : "-"}</div>
+      <button class="bg-transparent border border-[#45a29e] text-[#4fc3f7] px-[0.4rem] py-[0.15rem] rounded-[3px] text-[0.7rem] cursor-pointer" type="button">hapus</button>
     `;
-    el.querySelector(".btn-del").addEventListener("click", () => deleteNotice(n.id));
+    el.querySelector("button[type=button]").addEventListener("click", () => deleteNotice(n.id));
     noticesList.appendChild(el);
   });
 }
@@ -201,7 +202,7 @@ function placeFloors(floors) {
 
 function addLabel(text, x, y, z, floorId) {
   const el = document.createElement("div");
-  el.className = "floor-label";
+  el.className = "absolute z-10 bg-[#0b0c10]/85 border border-[#45a29e] text-[#4fc3f7] px-[0.6rem] py-[0.35rem] rounded-[4px] text-[0.8rem] cursor-pointer select-none whitespace-nowrap pointer-events-auto [&.active]:text-[#fff] [&.active]:border-[#4fc3f7]";
   el.textContent = text;
   el.dataset.floorId = floorId;
   el.addEventListener("click", (e) => {
