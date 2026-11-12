@@ -3,3 +3,6 @@ dist/
 data/*.sqlite
 .env
 *.log
+*.sqlite
+.idea/
+test-out.txt
