@@ -11,6 +11,11 @@ import {
   sqlEscape,
   toAccountRow,
 } from "@ai-office/db";
+import {
+  assignAgent,
+  advanceStage,
+  stageHistory,
+} from "@ai-office/orchestrator";
 import type { RepoAIAccount } from "@ai-office/db";
 
 const PORT = Number(process.env.PORT ?? 3045);
@@ -57,6 +62,11 @@ CREATE TABLE IF NOT EXISTS ai_accounts (
 CREATE INDEX IF NOT EXISTS idx_agents_floor ON agents(floor_id);
 CREATE INDEX IF NOT EXISTS idx_issues_floor ON issues(floor_id);
 CREATE INDEX IF NOT EXISTS idx_memories_scope ON memories(scope, scope_id);
+CREATE TABLE IF NOT EXISTS stage_history (
+  id TEXT PRIMARY KEY, issue_id TEXT NOT NULL, from_stage TEXT NOT NULL,
+  to_stage TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_stage_history_issue ON stage_history(issue_id);
 `;
 
 type Req = import("node:http").IncomingMessage & { body?: unknown };
@@ -294,6 +304,92 @@ export function createApp() {
           usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
         });
         return;
+      }
+
+      if (pathname === "/api/issues" && method === "POST") {
+        const body = (await readBody(req)) as {
+          floorId?: string;
+          title?: string;
+          body?: string | null;
+        };
+        if (!body.floorId) {
+          json(res, 400, { error: "floorId is required" });
+          return;
+        }
+        const id = `iss_${crypto.randomUUID().replace(/-/g, "")}`;
+        const now = new Date().toISOString();
+        await withDb(async (db) => {
+          const max = queryAll(
+            db,
+            `SELECT COALESCE(MAX(number), 0) FROM issues WHERE floor_id = ${sqlEscape(body.floorId)}`
+          )[0]?.[0] as number;
+          db.exec(
+            `INSERT INTO issues (id, floor_id, number, title, body, stage, assignee_id, pr_url, created_at, updated_at) VALUES (
+              ${sqlEscape(id)}, ${sqlEscape(body.floorId)}, ${sqlEscape(max + 1)}, ${sqlEscape(body.title ?? "New Issue")},
+              ${sqlEscape(body.body ?? null)}, 'needs-work', NULL, NULL, ${sqlEscape(now)}, ${sqlEscape(now)})`
+          );
+        });
+        json(res, 201, { id, number: 1, title: body.title ?? "New Issue" });
+        return;
+      }
+
+      if (pathname === "/api/agents" && method === "POST") {
+        const body = (await readBody(req)) as {
+          floorId?: string;
+          name?: string;
+          role?: string;
+          model?: string;
+          tokenCap?: number;
+        };
+        if (!body.floorId) {
+          json(res, 400, { error: "floorId is required" });
+          return;
+        }
+        const id = `ag_${crypto.randomUUID().replace(/-/g, "")}`;
+        const now = new Date().toISOString();
+        await withDb(async (db) =>
+          db.exec(
+            `INSERT INTO agents (id, floor_id, name, role, stage, model, token_cap, tokens_used, created_at, updated_at) VALUES (
+              ${sqlEscape(id)}, ${sqlEscape(body.floorId)}, ${sqlEscape(body.name ?? "Agent")}, ${sqlEscape(body.role ?? "developer")},
+              'needs-work', ${sqlEscape(body.model ?? "mock")}, ${sqlEscape(body.tokenCap ?? 0)}, 0, ${sqlEscape(now)}, ${sqlEscape(now)})`
+          )
+        );
+        json(res, 201, { id, name: body.name ?? "Agent" });
+        return;
+      }
+
+      const issueAction = /^\/api\/issues\/([^/]+)\/(assign|advance|history)$/.exec(pathname);
+      if (issueAction) {
+        const issueId = decodeURIComponent(issueAction[1]);
+        const action = issueAction[2];
+        if (action === "assign" && method === "POST") {
+          const body = (await readBody(req)) as { agentId?: string };
+          if (!body.agentId) {
+            json(res, 400, { error: "agentId is required" });
+            return;
+          }
+          try {
+            await withDb(async (db) => assignAgent(db, issueId, body.agentId as string));
+            json(res, 200, { issueId, agentId: body.agentId });
+          } catch (e) {
+            json(res, 400, { error: String(e) });
+          }
+          return;
+        }
+        if (action === "advance" && method === "POST") {
+          try {
+            const result = await withDb(async (db) => advanceStage(db, issueId));
+            json(res, 200, result);
+          } catch (e) {
+            json(res, 400, { error: String(e) });
+          }
+          return;
+        }
+        if (action === "history" && method === "GET") {
+          const history = await withDb(async (db) => stageHistory(db, issueId));
+          json(res, 200, history);
+          return;
+        }
       }
 
       notFound(res);

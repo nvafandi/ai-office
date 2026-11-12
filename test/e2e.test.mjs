@@ -93,4 +93,41 @@ describe("AI Office e2e", () => {
     assert.equal(status, 200);
     assert.ok(body.choices && body.choices[0] && body.choices[0].message);
   });
+
+  it("orchestrator: assign agent, advance stage, history", async () => {
+    const { body: floors } = await req("/api/floors");
+    const floorId = floors[0].id;
+
+    const { body: issue } = await req("/api/issues", {
+      method: "POST",
+      body: JSON.stringify({ floorId, title: "Fix flaky test" }),
+    });
+    assert.equal(issue.title, "Fix flaky test");
+
+    const { body: agent } = await req("/api/agents", {
+      method: "POST",
+      body: JSON.stringify({ floorId, name: "Dev Agent" }),
+    });
+
+    const assigned = await req(`/api/issues/${issue.id}/assign`, {
+      method: "POST",
+      body: JSON.stringify({ agentId: agent.id }),
+    });
+    assert.equal(assigned.status, 200);
+    assert.equal(assigned.body.agentId, agent.id);
+
+    const advanced = await req(`/api/issues/${issue.id}/advance`, { method: "POST" });
+    assert.equal(advanced.status, 200);
+    assert.equal(advanced.body.from, "needs-work");
+    assert.equal(advanced.body.to, "needs-review");
+
+    const rejected = await req(`/api/issues/nope/advance`, { method: "POST" });
+    assert.equal(rejected.status, 400);
+
+    const { status: hs, body: history } = await req(`/api/issues/${issue.id}/history`);
+    assert.equal(hs, 200);
+    assert.equal(history.length, 1);
+    assert.equal(history[0].from, "needs-work");
+    assert.equal(history[0].to, "needs-review");
+  });
 });

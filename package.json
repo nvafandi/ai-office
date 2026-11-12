@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "tsx watch apps/server/src/index.ts",
-    "build": "tsc -p packages/shared/tsconfig.json && tsc -p packages/db/tsconfig.json && tsc -p apps/server/tsconfig.json",
+    "build": "tsc -p packages/shared/tsconfig.json && tsc -p packages/db/tsconfig.json && tsc -p packages/orchestrator/tsconfig.json && tsc -p apps/server/tsconfig.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --check .",

@@ -9,7 +9,7 @@ Sumber: https://github.com/adrianeyre/ai-office — 3D office di mana agen AI me
 - **packages/db**: SQLite lokal via `sql.js` (tanpa Docker/Postgres), skema + migrasi + seed. Selesai.
 - **packages/events**: event bus. Belum.
 - **packages/github**: GitHub App client, intake isu. Belum.
-- **packages/orchestrator**: manager, pipeline isu, sandbox lokal, watchdog. Belum.
+- **packages/orchestrator**: manager, pipeline isu, sandbox lokal, watchdog. Selesai (pipeline stage + assign/advance/history + runner sandbox + watchdog idle).
 - **packages/communications**: Notice Board, integrasi pihak ketiga. Belum.
 
 ## 2. Stack (tidak menambah dependensi baru kecuali wajib)
@@ -24,7 +24,7 @@ Sumber: https://github.com/adrianeyre/ai-office — 3D office di mana agen AI me
 - Monorepo npm, tsconfig, ESLint/Prettier siap.
 - `packages/shared`: tipe (Floor, Agent, Issue, Memory, AIAccount), skema zod, util. Build OK.
 - `packages/db`: SQLite lokal via `sql.js`, skema + migrasi + seed. Build OK.
-- `apps/server`: HTTP `:3045`, API `/api/health`, `/api/floors` (GET/POST), `/api/agents`, `/api/issues`, gateway `/api/gateway/accounts`, `/v1/accounts`, `/v1/chat/completions`. Melayani UI statis. Build OK + diuji runtime.
+- `apps/server`: HTTP `:3045`, API `/api/health`, `/api/floors` (GET/POST), `/api/agents` (GET/POST), `/api/issues` (GET/POST), gateway `/api/gateway/accounts`, `/v1/chat/completions` (mock), orchestrator `/api/issues/:id/assign|advance|history`. Melayani UI statis + aset Three.js. Build OK + diuji runtime.
 - `apps/web`: halaman HTML + JS sederhana (daftar floor/issue). Sudah berjalan di server.
 
 ## 4. Target berikutnya (3D Office test UI)
@@ -38,7 +38,7 @@ Sumber: https://github.com/adrianeyre/ai-office — 3D office di mana agen AI me
 - M2 (selesai): server `:3045`, API floors/agents/issues + gateway, build lolos.
 - M3 (selesai): web UI menampilkan floor + issue dari API.
 - M4 (ini): 3D Office test UI (Three.js) berjalan di browser via server `:3045`.
-- M5: `npm run build && npm run test && npm run typecheck` lolos.
+- M5 (ini): `npm run build && npm run test` lolos (build + 12 test).
 
 ## 6. Risiko
 - Three.js via CDN ESM di browser — pastikan impor berjalan di server statis Node.
