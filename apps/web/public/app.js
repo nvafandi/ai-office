@@ -6,6 +6,7 @@ let scene, camera, renderer, controls, raycaster, pointer;
 let floorObjects = [];
 let labels = [];
 let selectedFloorId = null;
+let pendingFloorId = null;
 const floorCache = new Map();
 
 const canvas = document.getElementById("canvas");
@@ -232,6 +233,27 @@ function addLabel(text, x, y, z, floorId) {
   labels.push({ el, floorId, x, y, z });
 }
 
+function projectLabel() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  const proj = new THREE.Vector3();
+  labels.forEach((l) => {
+    const group = floorObjects.find((o) => o.userData.floorId === l.floorId);
+    if (!group) {
+      l.el.style.display = "none";
+      return;
+    }
+    proj.copy(group.position).project(camera);
+    if (proj.z < -1 || proj.z > 1) {
+      l.el.style.display = "none";
+      return;
+    }
+    l.el.style.display = "";
+    l.el.style.left = (proj.x * 0.5 + 0.5) * w + "px";
+    l.el.style.top = (-(proj.y * 0.5) + 0.5) * h + "px";
+  });
+}
+
 function setTab(tabId) {
   tabNotices.classList.toggle("active", tabId === "notices");
   tabWall.classList.toggle("active", tabId === "wall");
@@ -269,6 +291,7 @@ function renderAgents(agents) {
 }
 
 async function loadFloorData(floorId) {
+  pendingFloorId = floorId;
   const cached = floorCache.get(floorId);
   if (cached) {
     renderWall(cached.issues);
@@ -281,6 +304,7 @@ async function loadFloorData(floorId) {
       fetchJSON(`/issues?floorId=${encodeURIComponent(floorId)}`),
       fetchJSON(`/agents?floorId=${encodeURIComponent(floorId)}`),
     ]);
+    if (pendingFloorId !== floorId) return;
     floorCache.set(floorId, { issues, agents });
     renderWall(issues);
     renderAgents(agents);
@@ -328,6 +352,7 @@ function onResize() {
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);
+  projectLabel();
 }
 
 function onPointerDown(event) {
@@ -345,6 +370,7 @@ function onPointerDown(event) {
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
+  projectLabel();
   renderer.render(scene, camera);
 }
 
